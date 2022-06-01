@@ -24,65 +24,60 @@ function AuthProvider({ children }) {
     loadStorage()
   }, [])
 
+  function setDataUser(data) {
+    setUser(data);
+    storageUser(data);
+    setLoadingAuth(false);
+  }
+
 
   //Logar o Usuário
   async function signIn(email, password) {
     setLoadingAuth(true);
-    await firebase.auth().signInWithEmailAndPassword(email, password)
-      .then(async (value) => {
-        let uid = value.user.uid;
-        await firebase.database().ref("users").child(uid).once("value")
-          .then((snapshot => {
-            let data = {
-              uid: uid,
-              nome: snapshot.val().nome,
-              email: value.user.email
-            }
-            setUser(data);
-            storageUser(data);
-            setLoadingAuth(false);
-          }))
 
+    try {
+
+      const value = await firebase.auth().signInWithEmailAndPassword(email, password);
+      const uid = value.user.uid;
+
+      const snap = await firebase.database().ref("users").child(uid).once("value");
+      setDataUser({
+        uid: uid,
+        nome: snap.val().nome,
+        email: value.user.email,
       })
-      .catch((error) => {
-        alert(error.code);
-        setLoadingAuth(false);
-      })
+
+    }
+    catch (error) {
+      alert(error.code);
+      setLoadingAuth(false);
+    }
   }
 
 
   //Cadastrar o Usuário 
   async function signUp(nome, email, password) {
     setLoadingAuth(true);
-    await firebase
-      .auth()
-      .createUserWithEmailAndPassword(email, password)
-      .then(async (value) => {
-        let uid = value.user.uid;
-        await firebase
-          .database()
-          .ref("users")
-          .child(uid)
-          .set({
-            saldo: 0,
-            nome: nome,
-          })
-          .then(() => {
-            let data = {
-              uid: uid,
-              nome: nome,
-              email: value.user.email,
-            };
-            setUser(data);
-            storageUser(data);
-            setLoadingAuth(false);
-          });
 
+    try {
+
+      const value = await firebase.auth().createUserWithEmailAndPassword(email, password);
+      const uid = value.user.uid;
+
+      await firebase.database().ref("users").child(uid).set({
+        saldo: 0,
+        nome: nome
       })
-      .catch((error) => {
-        alert(error.code);
-        setLoadingAuth(false);
+      setDataUser({
+        uid: uid,
+        nome: nome,
+        email: value.user.email
       })
+
+    } catch (error) {
+      alert(error.code);
+      setLoading(false);
+    }
   }
 
   async function storageUser(data) {
