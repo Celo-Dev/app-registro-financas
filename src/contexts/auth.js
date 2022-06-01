@@ -1,6 +1,10 @@
 import React, { useState, createContext, useEffect } from "react";
-import firebase from "../services/firebaseConnection";
+import firebase from "../config/firebaseConnection";
+import { login } from "../services/login";
+import { alterarSaldo, register } from "../services/users";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+
 
 export const AuthContext = createContext({});
 
@@ -36,17 +40,9 @@ function AuthProvider({ children }) {
     setLoadingAuth(true);
 
     try {
-
-      const value = await firebase.auth().signInWithEmailAndPassword(email, password);
-      const uid = value.user.uid;
-
-      const snap = await firebase.database().ref("users").child(uid).once("value");
-      setDataUser({
-        uid: uid,
-        nome: snap.val().nome,
-        email: value.user.email,
-      })
-
+      const userAuth = await login(email, password);
+      console.tron.log('teste', userAuth);
+      setDataUser(userAuth);
     }
     catch (error) {
       alert(error.code);
@@ -60,25 +56,16 @@ function AuthProvider({ children }) {
     setLoadingAuth(true);
 
     try {
-
-      const value = await firebase.auth().createUserWithEmailAndPassword(email, password);
-      const uid = value.user.uid;
-
-      await firebase.database().ref("users").child(uid).set({
-        saldo: 0,
-        nome: nome
-      })
-      setDataUser({
-        uid: uid,
-        nome: nome,
-        email: value.user.email
-      })
+      const userAuth = await register(nome, email, password)
+      await alterarSaldo(nome, 0, userAuth.uid)
+      setDataUser(userAuth)
 
     } catch (error) {
       alert(error.code);
       setLoading(false);
     }
   }
+
 
   async function storageUser(data) {
     await AsyncStorage.setItem("Auth_user", JSON.stringify(data));

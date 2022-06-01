@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { SafeAreaView, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import firebase from '../../services/firebaseConnection';
+import firebase from '../../config/firebaseConnection';
 import { format } from 'date-fns';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../contexts/auth';

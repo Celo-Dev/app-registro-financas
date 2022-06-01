@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../contexts/auth';
 import { Background, Container, Name, Balance, Title, List } from './styles';
-import firebase from '../../services/firebaseConnection';
+import firebase from '../../config/firebaseConnection';
 import { format } from 'date-fns';
 
 import Header from '../../components/Header'
