@@ -1,14 +1,15 @@
 import React, { useState, useContext } from 'react';
 import { SafeAreaView, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
-import firebase from '../../config/firebaseConnection';
-import { format } from 'date-fns';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../contexts/auth';
 
 import Header from '../../components/Header';
 import { Background, IconView, Input, SubmitButton, SubmitText } from './styles';
 import Picker from '../../components/Picker';
+import { historico } from '../../services/historico';
+import { atualizarSaldo } from '../../services/users';
+
 
 
 export default function Register() {
@@ -17,6 +18,14 @@ export default function Register() {
   const [valorRegistro, setValorRegistro] = useState('');
   const [tipo, setTipo] = useState('receita');
   const { user: usuario } = useContext(AuthContext);
+
+
+  function goHome() {
+    Keyboard.dismiss();
+    setValorRegistro('');
+    navigation.navigate('Home');
+
+  }
 
   function handleSubmit() {
     Keyboard.dismiss();
@@ -42,31 +51,16 @@ export default function Register() {
 
   }
 
+  //Registrar historico
   async function handleAdd() {
-    let uid = usuario.uid;
-
-    let key = await firebase.database().ref('historico').child(uid).push().key;
-    await firebase.database().ref('historico').child(uid).child(key).set({
-      tipo: tipo,
-      valor: parseFloat(valorRegistro),
-      date: format(new Date(), 'dd/MM/yyyy')
-    })
+    await historico(usuario, tipo, valorRegistro)
+    const uid = usuario.uid;
 
     //Atualizar Saldo
-    let user = firebase.database().ref('users').child(uid);
-    await user.once('value').then((snapshot) => {
-      let saldo = parseFloat(snapshot.val().saldo);
+    await atualizarSaldo(uid, tipo, valorRegistro)
 
-      tipo === 'despesa' ? saldo -= parseFloat(valorRegistro) : saldo += parseFloat(valorRegistro);
-      user.child('saldo').set(saldo);
-    });
-
-    Keyboard.dismiss();
-    setValorRegistro('');
-    navigation.navigate('Home');
-
+    goHome()
   }
-
 
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>

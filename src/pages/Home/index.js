@@ -8,6 +8,7 @@ import Header from '../../components/Header'
 import HistoricoList from '../../components/HistoricoList';
 
 
+
 export default function Home() {
 
   const [historico, setHistorico] = useState([]);
