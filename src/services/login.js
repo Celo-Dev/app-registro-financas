@@ -11,3 +11,8 @@ export const login = async (email, password) => {
         email: value.user.email,
     }
 }
+
+//Sair do App
+export const logOut = async function (){
+    await firebase.auth().signOut();
+}

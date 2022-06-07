@@ -1,9 +1,7 @@
 import React, { useState, createContext, useEffect } from "react";
-import firebase from "../config/firebaseConnection";
-import { login } from "../services/login";
+import { login, logOut } from "../services/login";
 import { alterarSaldo, register } from "../services/users";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 
 
 export const AuthContext = createContext({});
@@ -41,7 +39,6 @@ function AuthProvider({ children }) {
 
     try {
       const userAuth = await login(email, password);
-      console.tron.log('teste', userAuth);
       setDataUser(userAuth);
     }
     catch (error) {
@@ -71,12 +68,12 @@ function AuthProvider({ children }) {
     await AsyncStorage.setItem("Auth_user", JSON.stringify(data));
   }
 
+  //Sair do App
   async function signOut() {
-    await firebase.auth().signOut();
+    await logOut();
+    
     await AsyncStorage.clear()
-      .then(() => {
-        setUser(null);
-      })
+    setUser(null);
   }
 
   return (
