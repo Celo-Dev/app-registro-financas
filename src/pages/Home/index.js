@@ -1,48 +1,40 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { AuthContext } from '../../contexts/auth';
-import { Background, Container, Name, Balance, Title, List } from './styles';
-import firebase from '../../config/firebaseConnection';
-import { format } from 'date-fns';
-
+import React, { useContext, useEffect } from 'react';
 import Header from '../../components/Header'
+import { Background, Container, Name, Balance, Title, List } from './styles';
 import HistoricoList from '../../components/HistoricoList';
 
+import { AuthContext } from '../../contexts/auth';
+import { useSelector, useDispatch } from 'react-redux';
+import { setAmount } from '../../store/amount';
+import { setHistorico } from '../../store/historico';
+
+import { buscarSaldo } from '../../services/users';
+import { buscaHistorico } from '../../services/historico';
 
 
 export default function Home() {
 
-  const [historico, setHistorico] = useState([]);
-  const [saldo, setSaldo] = useState(0);
-
   const { user } = useContext(AuthContext);
   const uid = user && user.uid;
 
+  const amount = useSelector((state) => state.amount.value);
+  const historico = useSelector((state) => state.historico.list);
+  const dispatch = useDispatch();
+
+
   useEffect(() => {
+
     async function loadList() {
-      await firebase.database().ref('users').child(uid).on('value', (snapshot) => {
-        setSaldo(snapshot.val().saldo);
-      });
+      const saldo = await buscarSaldo(uid);
+      dispatch(setAmount(saldo));
 
-      await firebase.database().ref('historico')
-        .child(uid)
-        .orderByChild('date').equalTo(format(new Date, 'dd/MM/yyyy'))
-        .limitToLast(10).on('value', (snapshot) => {
-          setHistorico([]);
-
-          snapshot.forEach((childItem) => {
-            let list = {
-              key: childItem.key,
-              tipo: childItem.val().tipo,
-              valor: childItem.val().valor
-            };
-
-            setHistorico(oldArray => [...oldArray, list].reverse());
-          })
-        })
-
+      const historicoList = await buscaHistorico(uid);
+      dispatch(setHistorico(historicoList))
+      
     }
 
     loadList();
+
   }, [])
 
   return (
@@ -50,7 +42,8 @@ export default function Home() {
       <Header />
       <Container>
         <Name>{user && user.nome}</Name>
-        <Balance>R$ {saldo.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}</Balance>
+
+        <Balance>R$ {amount.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}</Balance>
       </Container>
 
       <Title>Ultimas Movimentações : </Title>
@@ -61,7 +54,6 @@ export default function Home() {
         keyExtractor={item => item.key}
         renderItem={({ item }) => (<HistoricoList data={item} />)}
       />
-
     </Background>
   );
 }

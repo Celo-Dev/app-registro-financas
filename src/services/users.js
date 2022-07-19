@@ -18,15 +18,20 @@ export async function alterarSaldo(nome, saldo, uid) {
     })
 }
 
+export async function buscarSaldo(uid) {
+    const user = firebase.database().ref('users').child(uid);
+    const value = await user.once('value');
+
+    return parseFloat(value.val().saldo);
+}
+
 //atualizar saldo
 export async function atualizarSaldo(uid, tipo, valorRegistro) {
-    let user = firebase.database().ref('users').child(uid)
+    let saldo = await buscarSaldo(uid)
+    tipo === 'despesa' ? saldo -= parseFloat(valorRegistro) : saldo += parseFloat(valorRegistro);
 
-    await user.once('value').then((snapshot) => {
-        let saldo = parseFloat(snapshot.val().saldo);
+    const user = firebase.database().ref('users').child(uid);
+    user.child('saldo').set(saldo);
 
-        tipo === 'despesa' ? saldo -= parseFloat(valorRegistro) : saldo += parseFloat(valorRegistro);
-        user.child('saldo').set(saldo);
-    });
-
+    return saldo;
 }
